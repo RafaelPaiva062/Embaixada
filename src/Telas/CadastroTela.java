@@ -9,7 +9,9 @@ import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
+import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 public class CadastroTela extends JFrame {
 
     public CadastroTela() {
@@ -49,7 +51,7 @@ public class CadastroTela extends JFrame {
         JTextField rgField = new JTextField();
         JTextField cpfField = new JTextField();
         JComboBox<String> sexoComboBox = new JComboBox<>(new String[]{"Masculino", "Feminino", "Outro"});
-        JTextField dataNascimentoField = new JTextField("DDMMYYYY");
+        JTextField dataNascimentoField = new JTextField("DD/MM/YYYY",20);
         JTextField nacionalidadeField = new JTextField();
         JTextField cepField = new JTextField();
         JComboBox<String> estadoCivilComboBox = new JComboBox<>(new String[]{"Solteiro", "Casado", "Divorciado", "Viúvo"});
@@ -102,7 +104,7 @@ public class CadastroTela extends JFrame {
                 String dataFormatada;
                 try {
                     if (!dataNascimento.matches("\\d{8}")) {
-                        JOptionPane.showMessageDialog(null, "Data inválida! Use o formato DDMMYYYY.");
+                        JOptionPane.showMessageDialog(null, "Data inválida! Use o formato DD/MM/YYYY.");
                         return;
                     }
                     dataFormatada = dataNascimento.substring(4, 8) + "-" +
@@ -116,7 +118,7 @@ public class CadastroTela extends JFrame {
                 try (Connection connection = Conexao.getConnection()) {
                     String sql = "INSERT INTO usuario (nomeusuario, senha, email, numeroTelefone, rg, cpf, sexo, dataNascimento, nacionalidade, cep, estadoCivil) " +
                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                    PreparedStatement statement = connection.prepareStatement(sql);
+                    PreparedStatement statement = connection.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);
                     statement.setString(1, nome);
                     statement.setString(2, senha);
                     statement.setString(3, email);
@@ -149,6 +151,21 @@ public class CadastroTela extends JFrame {
 
         setVisible(true);
     }
+    private String formatarData(String data) {
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("dd/MM/yyyy");
+            SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
+            return outputFormat.format(inputFormat.parse(data));
+        } catch (ParseException e) {
+            JOptionPane.showMessageDialog(this, "Data inválida! Use o formato DD/MM/YYYY.", "Erro", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    private void redirecionarParaLogin() {
+        dispose();
+        new LoginTela().setVisible(true);
+    }
 
     private void addField(JPanel panel, GridBagConstraints gbc, String labelText, JComponent field, int row) {
         gbc.gridx = 0;
@@ -160,7 +177,7 @@ public class CadastroTela extends JFrame {
         gbc.anchor = GridBagConstraints.LINE_START;
         panel.add(field, gbc);
     }
-
+    
     public static void main(String[] args) {
         new CadastroTela();
     }
